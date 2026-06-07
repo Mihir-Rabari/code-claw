@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "@codeclaw/github": "file:../../packages/github",
-    "@codeclaw/types": "file:../../packages/types"
+    "@codeclaw/types": "file:../../packages/types",
+    "dotenv": "^16.4.5",
+    "openai": "^4.79.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "tsx": "^4.19.2"
