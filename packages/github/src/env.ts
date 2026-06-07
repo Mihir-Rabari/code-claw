@@ -1,4 +1,4 @@
-import type { GithubAppEnv, GithubAppEnvInput } from './types';
+import type { GithubAppEnv, GithubAppEnvInput } from './types.js';
 
 function required(value: string | undefined, name: string): string {
   if (!value || value.trim().length === 0) {
@@ -22,11 +22,14 @@ function normalizePrivateKey(privateKey: string): string {
 }
 
 export function loadGithubAppEnv(env: GithubAppEnvInput = process.env): GithubAppEnv {
+  const apiBaseUrl = env.GITHUB_API_BASE_URL?.trim();
+  const userAgent = env.GITHUB_USER_AGENT?.trim();
+
   return {
     appId: parseAppId(required(env.GITHUB_APP_ID, 'GITHUB_APP_ID')),
     privateKey: normalizePrivateKey(required(env.GITHUB_PRIVATE_KEY, 'GITHUB_PRIVATE_KEY')),
     webhookSecret: required(env.GITHUB_WEBHOOK_SECRET, 'GITHUB_WEBHOOK_SECRET'),
-    apiBaseUrl: env.GITHUB_API_BASE_URL?.trim() || undefined,
-    userAgent: env.GITHUB_USER_AGENT?.trim() || undefined,
+    ...(apiBaseUrl ? { apiBaseUrl } : {}),
+    ...(userAgent ? { userAgent } : {}),
   };
 }

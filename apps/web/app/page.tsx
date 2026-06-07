@@ -1,16 +1,17 @@
 import Link from 'next/link';
+
+import type { DashboardSnapshot } from '@/lib/models';
+
 import { AppShell } from '@/components/shell';
 import { Section } from '@/components/section';
 import { StatusChip } from '@/components/status-chip';
-import {
-  installationStatus,
-  observations,
-  overviewMetrics,
-  repositoryMemory,
-  reviewHistory,
-} from '@/lib/data';
+import { fetchApiJson } from '@/lib/api';
 
-export default function Page() {
+export const dynamic = 'force-dynamic';
+
+export default async function Page() {
+  const data = await fetchApiJson<DashboardSnapshot>('/api/dashboard');
+
   return (
     <AppShell pathname="/">
       <section className="hero">
@@ -37,7 +38,7 @@ export default function Page() {
       </section>
 
       <section className="gridMetrics" aria-label="Dashboard metrics">
-        {overviewMetrics.map((metric) => (
+        {data.overviewMetrics.map((metric) => (
           <article key={metric.label} className="metric">
             <p className="metricLabel">{metric.label}</p>
             <p className="metricValue">{metric.value}</p>
@@ -53,7 +54,7 @@ export default function Page() {
           description="The simplest useful view: what is connected, what is indexed, and what needs attention."
         >
           <div className="stack">
-            {installationStatus.map((item) => (
+            {data.installationStatus.map((item) => (
               <article key={item.label} className="statusItem">
                 <div className="statusTop">
                   <div>
@@ -79,8 +80,8 @@ export default function Page() {
           }
         >
           <div className="stack">
-            {observations.map((item) => (
-              <article key={item.title} className="observationItem">
+            {data.observations.map((item) => (
+              <article key={item.id} className="observationItem">
                 <div className="observationTop">
                   <div>
                     <div className="observationTag">{item.tag}</div>
@@ -101,7 +102,7 @@ export default function Page() {
         description="This view is intentionally close to the source: repository-owned markdown files in `.codeclaw/`."
       >
         <div className="stack">
-          {repositoryMemory.slice(0, 3).map((item) => (
+          {data.repositoryMemory.slice(0, 3).map((item) => (
             <article key={item.file} className="memoryCard">
               <div className="memoryCardHeader">
                 <div>
@@ -143,7 +144,7 @@ export default function Page() {
               </tr>
             </thead>
             <tbody>
-              {reviewHistory.map((row) => (
+              {data.reviewHistory.map((row) => (
                 <tr key={`${row.repo}-${row.pr}`}>
                   <td>{row.repo}</td>
                   <td>{row.pr}</td>

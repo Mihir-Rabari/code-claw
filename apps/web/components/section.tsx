@@ -11,7 +11,7 @@ export function Section({
   eyebrow?: string;
   description?: string;
   action?: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <section className="panel">

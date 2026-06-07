@@ -1,10 +1,19 @@
 import Link from 'next/link';
+
+import type { ObservationRecord } from '@/lib/models';
+
 import { AppShell } from '@/components/shell';
 import { Section } from '@/components/section';
 import { StatusChip } from '@/components/status-chip';
-import { observations } from '@/lib/data';
+import { fetchApiJson } from '@/lib/api';
 
-export default function ObservationsPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function ObservationsPage() {
+  const webObservations = await fetchApiJson<ObservationRecord[]>('/api/observations/acme%2Fweb');
+  const apiObservations = await fetchApiJson<ObservationRecord[]>('/api/observations/acme%2Fapi');
+  const observations = [...webObservations, ...apiObservations];
+
   return (
     <AppShell pathname="/observations">
       <section className="hero">
@@ -33,7 +42,7 @@ export default function ObservationsPage() {
       >
         <div className="stack">
           {observations.map((item) => (
-            <article key={item.title} className="observationItem">
+            <article key={item.id} className="observationItem">
               <div className="observationTop">
                 <div>
                   <div className="observationTag">{item.tag}</div>

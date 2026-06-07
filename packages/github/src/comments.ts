@@ -1,6 +1,6 @@
 import type { Octokit } from 'octokit';
 
-import type { GithubCommentTarget, GithubPullRequestCommentTarget } from './types';
+import type { GithubCommentTarget, GithubPullRequestCommentTarget } from './types.js';
 
 export interface PostGithubCommentOptions {
   body: string;

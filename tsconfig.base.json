@@ -13,8 +13,10 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
+      "@codeclaw/github": ["packages/github/src/index.ts"],
+      "@codeclaw/github/*": ["packages/github/src/*"],
       "@codeclaw/types": ["packages/types/src/index.ts"],
       "@codeclaw/types/*": ["packages/types/src/*"]
-    }
-  }
+    },
+  },
 }

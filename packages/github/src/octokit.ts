@@ -1,7 +1,7 @@
 import { createAppAuth } from '@octokit/auth-app';
 import { Octokit } from 'octokit';
 
-import type { GithubAppEnv } from './types';
+import type { GithubAppEnv } from './types.js';
 
 export interface CreateGithubOctokitOptions {
   env: GithubAppEnv;
@@ -16,7 +16,7 @@ export function createGithubOctokit({ env, installationId }: CreateGithubOctokit
       privateKey: env.privateKey,
       installationId,
     },
-    baseUrl: env.apiBaseUrl,
-    userAgent: env.userAgent ?? 'codeclaw-github',
+    ...(env.apiBaseUrl ? { baseUrl: env.apiBaseUrl } : {}),
+    ...(env.userAgent ? { userAgent: env.userAgent } : { userAgent: 'codeclaw-github' }),
   });
 }

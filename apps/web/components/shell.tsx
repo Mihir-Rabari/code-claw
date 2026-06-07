@@ -29,7 +29,7 @@ export function AppShell({
   children,
 }: {
   pathname: string;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <div className="dashboard">

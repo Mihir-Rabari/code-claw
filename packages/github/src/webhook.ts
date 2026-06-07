@@ -1,7 +1,7 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac } from 'node:crypto';
 
 export function verifyGithubWebhookSignature(
-  body: string | Buffer,
+  body: string,
   signature256: string | undefined,
   secret: string,
 ): boolean {
@@ -9,14 +9,9 @@ export function verifyGithubWebhookSignature(
     return false;
   }
 
-  const actual = Buffer.from(signature256.slice('sha256='.length), 'hex');
-  const expected = Buffer.from(createHmac('sha256', secret).update(body).digest('hex'), 'hex');
-
-  if (actual.length !== expected.length) {
-    return false;
-  }
-
-  return timingSafeEqual(actual, expected);
+  const actual = signature256.slice('sha256='.length);
+  const expected = createHmac('sha256', secret).update(body).digest('hex');
+  return actual.length === expected.length && actual === expected;
 }
 
 export function parseGithubWebhookEvent<TPayload = Record<string, unknown>>(body: string): TPayload {

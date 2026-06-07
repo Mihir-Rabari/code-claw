@@ -1,4 +1,4 @@
-import type { GithubEventHandlers, GithubRouteResult, GithubWebhookContext } from './types';
+import type { GithubEventHandlers, GithubRouteResult, GithubWebhookContext } from './types.js';
 
 function handledResult(
   eventName: string,
@@ -6,7 +6,13 @@ function handledResult(
   handler: string,
   message: string,
 ): GithubRouteResult {
-  return { handled: true, eventName, action, handler, message };
+  return {
+    handled: true,
+    eventName,
+    ...(action ? { action } : {}),
+    handler,
+    message,
+  };
 }
 
 export const defaultGithubEventHandlers: GithubEventHandlers = {

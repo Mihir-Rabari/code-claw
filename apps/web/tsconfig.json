@@ -1,11 +1,6 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es2022"
-    ],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -17,9 +12,6 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": [
-      "node"
-    ],
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -39,7 +31,11 @@
     "components/**/*.ts",
     "components/**/*.tsx",
     "lib/**/*.ts",
+    "types.d.ts",
     ".next/types/**/*.ts"
+  ],
+  "references": [
+    { "path": "../../packages/types" }
   ],
   "exclude": [
     "node_modules"

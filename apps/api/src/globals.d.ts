@@ -3,20 +3,25 @@ declare const process: {
 };
 
 declare module "node:http" {
-  interface IncomingMessage {
+  export interface IncomingMessage {
     url?: string;
+    method?: string;
+    headers: Record<string, string | string[] | undefined>;
+    on(event: 'data', listener: (chunk: string | Uint8Array) => void): IncomingMessage;
+    on(event: 'end', listener: () => void): IncomingMessage;
+    on(event: 'error', listener: (error: Error) => void): IncomingMessage;
   }
 
-  interface ServerResponse {
+  export interface ServerResponse {
     writeHead(statusCode: number, headers?: Record<string, string>): ServerResponse;
     end(chunk?: string): void;
   }
 
-  interface Server {
+  export interface Server {
     listen(port: number, callback?: () => void): void;
   }
 
-  function createServer(
+  export function createServer(
     requestListener: (request: IncomingMessage, response: ServerResponse) => void
   ): Server;
 

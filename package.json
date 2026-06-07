@@ -4,14 +4,15 @@
   "workspaces": [
     "apps/api",
     "apps/web",
+    "packages/github",
     "packages/types"
   ],
   "scripts": {
-    "build": "npm run build --workspace @codeclaw/types && npm run build --workspace @codeclaw/api && npm run build --workspace @codeclaw/web",
+    "build": "npm run build --workspace @codeclaw/types && npm run build --workspace @codeclaw/github && npm run build --workspace @codeclaw/api && npm run build --workspace @codeclaw/web",
     "clean": "npm run clean --workspaces --if-present",
     "dev:api": "npm run dev --workspace @codeclaw/api",
     "dev:web": "npm run dev --workspace @codeclaw/web",
-    "typecheck": "npm run typecheck --workspace @codeclaw/types && npm run typecheck --workspace @codeclaw/api && npm run typecheck --workspace @codeclaw/web"
+    "typecheck": "npm run typecheck --workspace @codeclaw/types && npm run typecheck --workspace @codeclaw/github && npm run typecheck --workspace @codeclaw/api && npm run typecheck --workspace @codeclaw/web"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

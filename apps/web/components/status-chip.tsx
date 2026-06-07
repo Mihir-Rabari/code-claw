@@ -3,7 +3,7 @@ export function StatusChip({
   children,
 }: {
   tone?: 'neutral' | 'success' | 'warn' | 'danger';
-  children: string;
+  children?: any;
 }) {
   return <span className={`pill ${tone}`}>{children}</span>;
 }

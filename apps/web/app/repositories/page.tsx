@@ -1,10 +1,19 @@
 import Link from 'next/link';
+
+import type { RepositoryMemoryItem } from '@/lib/models';
+
 import { AppShell } from '@/components/shell';
 import { Section } from '@/components/section';
 import { StatusChip } from '@/components/status-chip';
-import { repositoryMemory } from '@/lib/data';
+import { fetchApiJson } from '@/lib/api';
 
-export default function RepositoriesPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function RepositoriesPage() {
+  const repositoryMemory = await fetchApiJson<RepositoryMemoryItem[]>('/api/memory/acme%2Fweb');
+  const apiMemory = await fetchApiJson<RepositoryMemoryItem[]>('/api/memory/acme%2Fapi');
+  const allMemory = [...repositoryMemory, ...apiMemory];
+
   return (
     <AppShell pathname="/repositories">
       <section className="hero">
@@ -32,8 +41,8 @@ export default function RepositoriesPage() {
         description="Each entry points to the markdown path it would come from in a real repo checkout."
       >
         <div className="list">
-          {repositoryMemory.map((item) => (
-            <article key={item.file} className="memoryCard">
+          {allMemory.map((item) => (
+            <article key={`${item.repo}-${item.file}`} className="memoryCard">
               <div className="memoryCardHeader">
                 <div>
                   <div className="memoryPath">

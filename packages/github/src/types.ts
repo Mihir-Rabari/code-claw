@@ -2,8 +2,8 @@ export interface GithubAppEnv {
   appId: number;
   privateKey: string;
   webhookSecret: string;
-  apiBaseUrl?: string;
-  userAgent?: string;
+  apiBaseUrl?: string | undefined;
+  userAgent?: string | undefined;
 }
 
 export interface GithubAppEnvInput {
@@ -16,17 +16,17 @@ export interface GithubAppEnvInput {
 
 export interface GithubWebhookContext<TPayload = Record<string, unknown>> {
   eventName: string;
-  action?: string;
+  action?: string | undefined;
   payload: TPayload;
-  deliveryId?: string;
+  deliveryId?: string | undefined;
 }
 
 export interface GithubRouteResult {
   handled: boolean;
   eventName: string;
-  action?: string;
-  handler?: string;
-  message?: string;
+  action?: string | undefined;
+  handler?: string | undefined;
+  message?: string | undefined;
 }
 
 export type GithubWebhookHandler<TPayload extends Record<string, unknown> = Record<string, unknown>> = (
