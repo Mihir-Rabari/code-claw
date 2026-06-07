@@ -1,0 +1,9 @@
+{
+  "name": "@codeclaw/github",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@octokit/auth-app": "^7.1.2",
+    "octokit": "^4.1.0"
+  }
+}
