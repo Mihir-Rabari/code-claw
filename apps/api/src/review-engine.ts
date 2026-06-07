@@ -1,6 +1,6 @@
-import type { CodeClawObservationRecord, CodeClawReviewRecord } from '@codeclaw/types';
+import type { CodeClawMemoryProposalRecord, CodeClawObservationRecord, CodeClawReviewRecord } from '@codeclaw/types';
 
-import { getObservations, getReviews, recordWebhookEvent } from './store.js';
+import { getObservations, getReviews, recordReview, recordWebhookEvent } from './store.js';
 
 export interface ReviewInput {
   repoFullName: string;
@@ -13,7 +13,7 @@ export interface ReviewInput {
 export interface ReviewResult {
   review: CodeClawReviewRecord;
   observation?: CodeClawObservationRecord;
-  memoryProposalTriggered: boolean;
+  proposal?: CodeClawMemoryProposalRecord;
 }
 
 function inferOutcome(title: string, body: string | undefined) {
@@ -42,15 +42,7 @@ export function runReview(input: ReviewInput): ReviewResult {
     summary: `Reviewed ${input.eventName}${input.action ? ` (${input.action})` : ''}: ${input.title}`,
   };
 
-  const observation: CodeClawObservationRecord = {
-    id: `obs-${Date.now()}`,
-    repo: input.repoFullName,
-    tag: 'Review',
-    title: `Review processed for ${input.repoFullName}`,
-    body: review.summary,
-    tone: 'neutral',
-    createdAt: new Date().toISOString(),
-  };
+  recordReview(review);
 
   const trigger = recordWebhookEvent(input.eventName, input.action, {
     repository: {
@@ -61,14 +53,14 @@ export function runReview(input: ReviewInput): ReviewResult {
     },
     pull_request: {
       title: input.title,
-      body: input.body,
+      ...(input.body ? { body: input.body } : {}),
     },
   });
 
   return {
     review,
-    observation,
-    memoryProposalTriggered: Boolean(trigger.reviewed),
+    ...(trigger.observation ? { observation: trigger.observation } : {}),
+    ...(trigger.proposal ? { proposal: trigger.proposal } : {}),
   };
 }
 
