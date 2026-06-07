@@ -10,8 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@codeclaw/github": "workspace:*",
-    "@codeclaw/types": "workspace:*"
+    "@codeclaw/github": "file:../../packages/github",
+    "@codeclaw/types": "file:../../packages/types"
   },
   "devDependencies": {
     "tsx": "^4.19.2"

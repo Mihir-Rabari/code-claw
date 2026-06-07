@@ -10,7 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@codeclaw/types": "workspace:*",
+    "@codeclaw/types": "file:../../packages/types",
     "next": "^15.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

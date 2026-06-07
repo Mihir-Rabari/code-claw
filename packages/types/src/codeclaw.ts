@@ -85,4 +85,5 @@ export interface CodeClawDashboardSnapshot {
   repositoryMemory: CodeClawRepositoryMemoryItem[];
   reviewHistory: CodeClawReviewRecord[];
   observations: CodeClawObservationRecord[];
+  memoryProposals: CodeClawMemoryProposalRecord[];
 }
