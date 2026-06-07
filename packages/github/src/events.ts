@@ -69,6 +69,22 @@ export function createGithubEventRouter(handlers: Partial<GithubEventHandlers> =
           handler: 'pull_request',
           message: 'pull request event received',
         };
+      case 'pull_request_review':
+        return (await mergedHandlers.pull_request_review?.(context)) ?? {
+          handled: true,
+          eventName: context.eventName,
+          action: context.action,
+          handler: 'pull_request_review',
+          message: 'pull request review event received',
+        };
+      case 'pull_request_review_comment':
+        return (await mergedHandlers.pull_request_review_comment?.(context)) ?? {
+          handled: true,
+          eventName: context.eventName,
+          action: context.action,
+          handler: 'pull_request_review_comment',
+          message: 'pull request review comment event received',
+        };
       default:
         return {
           handled: false,

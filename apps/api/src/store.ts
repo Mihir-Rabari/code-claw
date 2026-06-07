@@ -90,50 +90,14 @@ const installationStatus: CodeClawInstallationStatus[] = [
   },
 ];
 
-const repositoryMemory: CodeClawRepositoryMemoryItem[] = [
-  {
-    repo: 'acme/web',
-    file: '.codeclaw/concepts/frontend-architecture.md',
-    title: 'Frontend architecture notes',
-    excerpt:
-      'App router boundaries, shared UI expectations, and the current ownership map for the web client.',
-    updated: '2h ago',
-    tone: 'success',
-  },
-  {
-    repo: 'acme/api',
-    file: '.codeclaw/decisions/adr-001-use-zod.md',
-    title: 'Validation standard',
-    excerpt:
-      'Preferred validation approach, where it applies, and the cases where lighter checks are still okay.',
-    updated: '5h ago',
-    tone: 'neutral',
-  },
-  {
-    repo: 'acme/mobile',
-    file: '.codeclaw/debates/auth-flow.md',
-    title: 'Auth flow debate',
-    excerpt:
-      'Known sign-in behavior, token refresh expectations, and the last reviewed edge cases.',
-    updated: 'Yesterday',
-    tone: 'warn',
-  },
-  {
-    repo: 'acme/infra',
-    file: '.codeclaw/observations/runbooks.md',
-    title: 'Runbook index',
-    excerpt:
-      'The most useful operational runbooks and where they sit in the repository memory tree.',
-    updated: '2d ago',
-    tone: 'neutral',
-  },
-];
+
 
 interface RuntimeState {
   installations: CodeClawInstallationRecord[];
   reviewHistory: CodeClawReviewRecord[];
   observations: CodeClawObservationRecord[];
   memoryProposals: CodeClawMemoryProposalRecord[];
+  repositoryMemory: CodeClawRepositoryMemoryItem[];
 }
 
 const seedState: RuntimeState = {
@@ -230,6 +194,44 @@ const seedState: RuntimeState = {
       createdAt: now(),
     },
   ],
+  repositoryMemory: [
+    {
+      repo: 'acme/web',
+      file: '.codeclaw/concepts/frontend-architecture.md',
+      title: 'Frontend architecture notes',
+      excerpt:
+        'App router boundaries, shared UI expectations, and the current ownership map for the web client.',
+      updated: '2h ago',
+      tone: 'success',
+    },
+    {
+      repo: 'acme/api',
+      file: '.codeclaw/decisions/adr-001-use-zod.md',
+      title: 'Validation standard',
+      excerpt:
+        'Preferred validation approach, where it applies, and the cases where lighter checks are still okay.',
+      updated: '5h ago',
+      tone: 'neutral',
+    },
+    {
+      repo: 'acme/mobile',
+      file: '.codeclaw/debates/auth-flow.md',
+      title: 'Auth flow debate',
+      excerpt:
+        'Known sign-in behavior, token refresh expectations, and the last reviewed edge cases.',
+      updated: 'Yesterday',
+      tone: 'warn',
+    },
+    {
+      repo: 'acme/infra',
+      file: '.codeclaw/observations/runbooks.md',
+      title: 'Runbook index',
+      excerpt:
+        'The most useful operational runbooks and where they sit in the repository memory tree.',
+      updated: '2d ago',
+      tone: 'neutral',
+    },
+  ],
 };
 
 function ensureStateDirectory() {
@@ -254,6 +256,7 @@ function cloneState(state: RuntimeState): RuntimeState {
     reviewHistory: state.reviewHistory.map((item) => ({ ...item })),
     observations: state.observations.map((item) => ({ ...item })),
     memoryProposals: state.memoryProposals.map((item) => ({ ...item })),
+    repositoryMemory: state.repositoryMemory.map((item) => ({ ...item })),
   };
 }
 
@@ -265,6 +268,9 @@ function hydrateState(parsed: Partial<RuntimeState> | null): RuntimeState {
     memoryProposals: Array.isArray(parsed?.memoryProposals)
       ? (parsed.memoryProposals as CodeClawMemoryProposalRecord[])
       : [],
+    repositoryMemory: Array.isArray(parsed?.repositoryMemory)
+      ? (parsed.repositoryMemory as CodeClawRepositoryMemoryItem[])
+      : [],
   };
 
   return {
@@ -272,6 +278,7 @@ function hydrateState(parsed: Partial<RuntimeState> | null): RuntimeState {
     reviewHistory: merged.reviewHistory.length > 0 ? merged.reviewHistory : seedState.reviewHistory,
     observations: merged.observations.length > 0 ? merged.observations : seedState.observations,
     memoryProposals: merged.memoryProposals.length > 0 ? merged.memoryProposals : seedState.memoryProposals,
+    repositoryMemory: merged.repositoryMemory.length > 0 ? merged.repositoryMemory : seedState.repositoryMemory,
   };
 }
 
@@ -513,7 +520,7 @@ function buildMetrics(): CodeClawDashboardSnapshot['overviewMetrics'] {
     },
     {
       label: 'Memory docs',
-      value: String(repositoryMemory.length),
+      value: String(state.repositoryMemory.length),
       note: 'Repository-owned markdown files indexed from .codeclaw/.',
     },
     {
@@ -533,7 +540,7 @@ export function getDashboardSnapshot(): CodeClawDashboardData {
   return {
     overviewMetrics: buildMetrics(),
     installationStatus,
-    repositoryMemory,
+    repositoryMemory: getRepositoryMemory(),
     reviewHistory: getReviews(),
     observations: getObservations(),
     installations: getInstallations(),
@@ -556,7 +563,7 @@ export function getObservations(repoFullName?: string) {
 }
 
 export function getRepositoryMemory(repoFullName?: string) {
-  return repoFullName ? repositoryMemory.filter((item) => item.repo === repoFullName) : repositoryMemory;
+  return repoFullName ? state.repositoryMemory.filter((item) => item.repo === repoFullName) : state.repositoryMemory;
 }
 
 export function getMemoryProposals(repoFullName?: string) {
@@ -575,4 +582,100 @@ export function listRecentObservations(repoFullName: string, limit = 5) {
 
 export function getStateFilePath() {
   return stateFile;
+}
+
+export function handleMemoryProposalPRClosed(prUrl: string, merged: boolean) {
+  const proposal = state.memoryProposals.find((item) => item.prUrl === prUrl);
+  if (!proposal) return null;
+
+  if (merged) {
+    proposal.status = 'merged';
+
+    // Check if concept already exists
+    const conceptFile = `.codeclaw/concepts/${proposal.pattern}.md`;
+    const exists = state.repositoryMemory.some((item) => item.repo === proposal.repo && item.file === conceptFile);
+
+    if (!exists) {
+      state.repositoryMemory.unshift({
+        repo: proposal.repo,
+        file: conceptFile,
+        title: proposal.title,
+        excerpt: proposal.reason,
+        updated: 'Just now',
+        tone: 'success',
+      });
+    }
+
+    // Record promoting observation
+    state.observations.unshift({
+      id: `obs-merge-${Date.now()}`,
+      repo: proposal.repo,
+      tag: 'Memory',
+      title: `Memory accepted: ${proposal.title}`,
+      body: `Maintainer merged the proposal PR. CodeClaw successfully promoted this observation pattern into the repository concepts memory.`,
+      tone: 'success',
+      createdAt: now(),
+    });
+  } else {
+    proposal.status = 'rejected';
+
+    // Record rejecting observation
+    state.observations.unshift({
+      id: `obs-reject-${Date.now()}`,
+      repo: proposal.repo,
+      tag: 'Memory',
+      title: `Memory proposal rejected: ${proposal.title}`,
+      body: `Maintainer closed the proposal PR without merging. The pattern observations remain, but will not be promoted to concepts.`,
+      tone: 'danger',
+      createdAt: now(),
+    });
+  }
+
+  persistState();
+  return proposal;
+}
+
+export function handleMemoryProposalPRReview(
+  prUrl: string,
+  reviewState: 'approved' | 'changes_requested' | 'commented',
+  body: string | null,
+) {
+  const proposal = state.memoryProposals.find((item) => item.prUrl === prUrl);
+  if (!proposal) return null;
+
+  if (reviewState === 'changes_requested') {
+    // Transition to debate
+    const debateFile = `.codeclaw/debates/${proposal.pattern}.md`;
+    const exists = state.repositoryMemory.some((item) => item.repo === proposal.repo && item.file === debateFile);
+
+    if (!exists) {
+      // Remove pending concept if any
+      state.repositoryMemory = state.repositoryMemory.filter(
+        (item) => !(item.repo === proposal.repo && item.file === `.codeclaw/concepts/${proposal.pattern}.md`),
+      );
+
+      state.repositoryMemory.unshift({
+        repo: proposal.repo,
+        file: debateFile,
+        title: `Debate: ${proposal.title}`,
+        excerpt: body || `Maintainer requested changes on the proposal PR. The team is still actively evaluating alternatives for ${proposal.pattern}.`,
+        updated: 'Just now',
+        tone: 'warn',
+      });
+    }
+
+    // Record debate observation
+    state.observations.unshift({
+      id: `obs-debate-${Date.now()}`,
+      repo: proposal.repo,
+      tag: 'Debate',
+      title: `Active Debate: ${proposal.title}`,
+      body: `Maintainer requested changes on the proposal PR. CodeClaw has routed this pattern into the engineering debates index for further evaluation.`,
+      tone: 'warn',
+      createdAt: now(),
+    });
+  }
+
+  persistState();
+  return proposal;
 }

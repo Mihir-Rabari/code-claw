@@ -38,6 +38,8 @@ export interface GithubEventHandlers {
   installation?: GithubWebhookHandler;
   issue_comment?: GithubWebhookHandler;
   pull_request?: GithubWebhookHandler;
+  pull_request_review?: GithubWebhookHandler;
+  pull_request_review_comment?: GithubWebhookHandler;
 }
 
 export interface GithubCommentTarget {
