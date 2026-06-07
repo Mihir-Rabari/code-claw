@@ -21,7 +21,7 @@ function normalizePrivateKey(privateKey: string): string {
   return privateKey.replace(/\\n/g, '\n').trim();
 }
 
-export function loadGithubAppEnv(env: GithubAppEnvInput = process.env): GithubAppEnv {
+export function loadGithubAppEnv(env: Record<string, string | undefined> = process.env): GithubAppEnv {
   const apiBaseUrl = env.GITHUB_API_BASE_URL?.trim();
   const userAgent = env.GITHUB_USER_AGENT?.trim();
 

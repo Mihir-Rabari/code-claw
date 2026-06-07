@@ -5,6 +5,7 @@ coverage
 .env
 .env.*
 !.env.example
+*.log
 apps/*/dist
 packages/*/dist
 apps/*/.vite
@@ -12,4 +13,5 @@ apps/*/.next
 apps/web/pnpm-lock.yaml
 apps/web/pnpm-workspace.yaml
 apps/api/data/state.json
+apps/api/data
 .next

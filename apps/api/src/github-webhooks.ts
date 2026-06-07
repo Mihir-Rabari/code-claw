@@ -1,8 +1,8 @@
 import { createGithubEventRouter, loadGithubAppEnv, parseGithubWebhookEvent, verifyGithubWebhookSignature } from '@codeclaw/github';
 
 import { openMemoryProposalForRepo } from './proposal-prs.js';
-import { handleMemoryProposalPRClosed, handleMemoryProposalPRReview, recordWebhookEvent } from './store.js';
-import { runReview } from './review-engine.js';
+import { runRealReview } from './review-pipeline.js';
+import { handleMemoryProposalPRClosed, handleMemoryProposalPRReview, recordWebhookEvent, getMemoryProposals } from './store.js';
 
 export function createWebhookRouter() {
   return createGithubEventRouter({
@@ -20,7 +20,7 @@ export function createWebhookRouter() {
       const pullRequest = payload as {
         installation?: { id?: number };
         repository?: { owner?: { login?: string }; name?: string; full_name?: string; default_branch?: string };
-        pull_request?: { title?: string; body?: string; html_url?: string; merged?: boolean };
+        pull_request?: { title?: string; body?: string; html_url?: string; merged?: boolean; number?: number };
       };
 
       if (action === 'closed' && pullRequest.pull_request?.html_url) {
@@ -41,27 +41,40 @@ export function createWebhookRouter() {
       }
 
       const repoFullName = pullRequest.repository?.full_name ?? 'acme/unknown';
-      const title = pullRequest.pull_request?.title ?? 'Pull request';
-      const body = pullRequest.pull_request?.body;
-      const reviewResult = runReview({
-        repoFullName,
-        title,
-        ...(body ? { body } : {}),
-        eventName: 'pull_request',
-        ...(action ? { action } : {}),
-      });
+      const installationId = pullRequest.installation?.id;
+      const ownerLogin = pullRequest.repository?.owner?.login;
+      const repoName = pullRequest.repository?.name;
+      const prNumber = pullRequest.pull_request?.number ?? 0;
 
-      if (reviewResult.proposal && pullRequest.installation?.id && pullRequest.repository?.owner?.login && pullRequest.repository?.name) {
-        await openMemoryProposalForRepo({
-          installationId: pullRequest.installation.id,
-          repo: {
-            owner: pullRequest.repository.owner.login,
-            name: pullRequest.repository.name,
-            fullName: pullRequest.repository.full_name ?? repoFullName,
-            defaultBranch: pullRequest.repository.default_branch ?? 'main',
-          },
-          proposal: reviewResult.proposal,
-        });
+      let pipelineResult: { proposalTriggered: boolean; commentsPosted: number; observationsRecorded: string[] } | null = null;
+      if (installationId && ownerLogin && repoName && prNumber) {
+        try {
+          pipelineResult = await runRealReview({
+            installationId,
+            owner: ownerLogin,
+            repo: repoName,
+            prNumber,
+          });
+        } catch (error) {
+          console.error('Review pipeline failed:', error);
+        }
+      }
+
+      if (pipelineResult?.proposalTriggered && installationId && ownerLogin && repoName) {
+        const proposals = getMemoryProposals(repoFullName);
+        const pending = proposals.find((item) => item.status === 'pending' && !item.prUrl);
+        if (pending) {
+          await openMemoryProposalForRepo({
+            installationId,
+            repo: {
+              owner: ownerLogin,
+              name: repoName,
+              fullName: pullRequest.repository?.full_name ?? repoFullName,
+              defaultBranch: pullRequest.repository?.default_branch ?? 'main',
+            },
+            proposal: pending,
+          });
+        }
       }
 
       return {
@@ -69,7 +82,9 @@ export function createWebhookRouter() {
         eventName: 'pull_request',
         ...(action ? { action } : {}),
         handler: 'pull_request',
-        message: reviewResult.proposal ? 'review stored; proposal PR opened or pending' : 'review stored',
+        message: pipelineResult
+          ? `review posted (${pipelineResult.commentsPosted} comment(s), ${pipelineResult.observationsRecorded.length} observation(s))`
+          : 'review skipped (missing installation/repository context)',
       };
     },
     pull_request_review: async ({ action, payload }) => {

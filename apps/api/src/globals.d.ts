@@ -18,6 +18,10 @@ declare module 'node:url' {
   export function fileURLToPath(url: string | URL): string;
 }
 
+declare const Buffer: {
+  from(data: string, encoding: 'base64'): { toString(encoding: 'utf-8'): string };
+};
+
 declare module 'node:http' {
   export interface IncomingMessage {
     url?: string;
